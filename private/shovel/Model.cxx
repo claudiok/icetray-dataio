@@ -133,18 +133,31 @@ Model::do_goto_frame()
 }
 
 void
+Model::save_xml()
+{
+  optional<string> result = view_.get_file("Save xml to file: ");
+  if (!result)
+    return;
+
+  std::ofstream ofs(result->c_str());
+
+  unsigned fileindex = frame_infos_[x_index_].second;
+  I3FramePtr frame = i3file_.get_raw_frame(fileindex);
+
+  string xml = frame->as_xml(y_keystring_);
+
+  ofs <<  prettify_xml(xml);
+  ofs.close();
+}
+
+void
 Model::write_frame()
 {
-  optional<string> result = view_.get_file("  Write frame to file: ");
+  optional<string> result = view_.get_file("Write frame to file: ");
   if (!result)
     return;
 
   std::ofstream ofs(result->c_str(), ios::binary | ios::app);
-
-  // grr.  boost::iostreams::file_sink doesn't want to do append.
-  //  boost::iostreams::filtering_ostream os;
-  //  if(result)
-  //    I3::dataio::open(os, *result, ios::binary | ios_base::app | ios::out);
 
   unsigned fileindex = frame_infos_[x_index_].second;
   I3FramePtr fp = i3file_.get_raw_frame(fileindex);
