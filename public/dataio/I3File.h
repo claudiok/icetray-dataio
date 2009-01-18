@@ -45,14 +45,11 @@ public:
   struct FrameInfo
   {
     I3Frame::Stream stream;
-    unsigned geo_frame;
-    unsigned cal_frame;
-    unsigned ds_frame;
+    typedef std::map<I3Frame::Stream, unsigned> stream_map_t;
+    stream_map_t other_streams;
 
     std::ios::pos_type pos;
-    FrameInfo() 
-      : stream(I3Frame::None), geo_frame(0), cal_frame(0), ds_frame(0) 
-    { }
+    FrameInfo() : stream(I3Frame::None) { }
   };
 
   I3File();
