@@ -106,4 +106,4 @@ set_property(TEST dataio::r_readnulls.py APPEND PROPERTY DEPENDS dataio::read_re
 set_property(TEST dataio::s_i3reader_readnulls.py APPEND PROPERTY DEPENDS dataio::r_readnulls.py)
 set_property(TEST dataio::test_randomaccess_file.py APPEND PROPERTY DEPENDS dataio::s_i3reader_readnulls.py)
 set_property(TEST dataio::t_skip_infoframes.py APPEND PROPERTY DEPENDS dataio::test_randomaccess_file.py)
-set_property(TEST dataio::writer_is_conditional.py APPEND PROPERTY DEPENDS dataio::t_skip_infoframes.py
+set_property(TEST dataio::writer_is_conditional.py APPEND PROPERTY DEPENDS dataio::t_skip_infoframes.py)
