@@ -185,7 +185,13 @@ Model::move_y(int delta)
 I3FramePtr
 Model::get_frame(unsigned index)
 {
-  return i3file_.get_raw_frame(frame_infos_[index].second);
+  if ((!cached_frame_) || (cached_frame_index_ != frame_infos_[index].second))
+  {
+    cached_frame_index_ = frame_infos_[index].second;
+    cached_frame_ = i3file_.get_frame(frame_infos_[index].second);
+  }
+
+  return cached_frame_;
 }
 
 void
@@ -224,14 +230,21 @@ Model::pretty_print()
   if (frame->size() == 0)
     return;
 
-  I3TrayInfoConstPtr ticp = frame->Get<I3TrayInfoConstPtr>(y_keystring_);
-  
+  I3TrayInfoConstPtr ticp;
   ostringstream oss;
 
-  if (!ticp)
-    oss << "\n\n\nCan only pretty-print I3TrayInfo currently.\n\n\n";
-  else
-    oss << *ticp;
+  try{
+      ticp = frame->Get<I3TrayInfoConstPtr>(y_keystring_);
+      if (!ticp)
+        oss << "\n\n\nCan only pretty-print I3TrayInfo currently.\n\n\n";
+      else{
+        oss << *ticp;
+      }
+   }
+  catch( const boost::archive::archive_exception& e ){
+      oss << "\n\n\n Trouble printing this I3TrayInfo: " << e.what() << "\n\n\n";
+  }
+
   view_.page(oss.str());
 }
 
@@ -274,6 +287,23 @@ Model::streams(unsigned start_index, unsigned length)
 
   
   return ret;
+}
+
+vector<std::string> 
+Model::sub_event_streams(unsigned start_index, unsigned length)
+{
+    //  log_trace("Get streams for %u, len %u", start_index, length);
+    assert(start_index + length <= frame_infos_.size());
+    vector<std::string> ret;
+    
+    for (unsigned i=0; i<length; i++)
+    {
+        ret.push_back(frame_infos_[start_index + i].first.sub_event_stream);
+        //      log_trace("push %c", ret[i].value);
+    }
+    
+    
+    return ret;
 }
 
 void

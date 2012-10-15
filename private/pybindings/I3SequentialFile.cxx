@@ -111,8 +111,9 @@ namespace I3 { namespace dataio { namespace python {
   void
   I3SequentialFile::rewind()
   {
-    close();
-    open_file(path_, mode_);
+    Mode oldmode = mode_;
+    close(); // resets mode_
+    open_file(path_, oldmode);
   }
 
   void
@@ -181,6 +182,8 @@ namespace I3 { namespace dataio { namespace python {
 
         if (s == I3Frame::None || f->GetStop() == s)
           return f;
+        else
+          f->clear();
       } catch (const std::exception& e) {
         log_fatal("caught exception %s", e.what());
       }

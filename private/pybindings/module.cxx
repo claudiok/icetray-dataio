@@ -19,7 +19,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>
  *  
  */
-
 #include <icetray/load_project.h>
 
 #define REGISTER_THESE_THINGS \
@@ -31,7 +30,8 @@ BOOST_PP_SEQ_FOR_EACH(I3_REGISTRATION_FN_DECL, ~, REGISTER_THESE_THINGS)
 
 BOOST_PYTHON_MODULE(dataio)
 {
-  load_project("libdataio", false);
+
+  load_project("dataio", false); 
 
   BOOST_PP_SEQ_FOR_EACH(I3_REGISTER, ~, REGISTER_THESE_THINGS);
 }
