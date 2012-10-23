@@ -27,12 +27,15 @@ using boost::optional;
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
+#include <dataclasses/physics/I3EventHeader.h>
+
 #include <map>
 #include <dataio/I3File.h>
 #include <icetray/open.h>
 #include <icetray/serialization.h>
 #include <icetray/Utility.h>
 
+#include <limits>
 #include <vector>
 #include <errno.h>
 #include <sys/types.h>
@@ -57,7 +60,8 @@ class I3FileImpl
 
   vector<string> skipkeys_;
 
-  map<unsigned, I3FramePtr> frame_cache_;
+  typedef map<I3Frame::Stream, pair<unsigned, I3FramePtr> > frame_cache_map_t;
+  frame_cache_map_t frame_cache_;
 
   static void noop(double) { }
 
@@ -193,6 +197,17 @@ I3FileImpl::open_file(const std::string& filename, boost::function<void(double)>
             continue;
         }
 
+      // A very special (and moderately evil) hack for SubEventStreams on Physics frames.
+      // It assigns unique ids to the different SubEventStream names.
+      frame_info.sub_event_stream = "";
+      if (frame->GetStop() == I3Frame::Physics) {
+        I3EventHeaderConstPtr header = frame->Get<I3EventHeaderConstPtr>(I3DefaultName<I3EventHeader>::value());
+        if ((header) && (frame->GetStop(I3DefaultName<I3EventHeader>::value()) == frame->GetStop())) {
+          // only use non-mixed-in headers
+          frame_info.sub_event_stream = header->GetSubEventStream();
+        }
+      }
+        
       stream_cache[frame->GetStop()] = counter;
       log_trace("Frame %c at %u (%zu total)", frame->GetStop().id(), counter, stream_cache.size());
 
@@ -265,8 +280,10 @@ I3FileImpl::get_raw_frame(unsigned index)
 
   if (!b)
     return I3FramePtr();
-  else
+  else {
+    if (frame) frame->drop_blobs(false);
     return frame;
+  }
 }
 
 I3FramePtr
@@ -293,7 +310,26 @@ I3FileImpl::get_frame(unsigned index)
       if (iter->first == I3Frame::Physics || iter->first == I3Frame::TrayInfo)
         continue;
 
-      I3FramePtr otherframe = get_raw_frame(iter->second);
+      I3FramePtr otherframe;
+        
+      frame_cache_map_t::iterator cache_it =
+        frame_cache_.find(iter->first);
+      if (cache_it != frame_cache_.end()) {
+        if (cache_it->second.first == iter->second) {
+          // it's in the cache, retrieve the frame
+          otherframe = cache_it->second.second;
+        } else {
+          // there's something at this stop in the cache,
+          // but it's the wrong frame. get the correct one.
+          otherframe = get_raw_frame(iter->second);
+          frame_cache_[iter->first] = std::make_pair(iter->second, otherframe);
+        }
+      } else {
+        // no frame of this stream type is in the cache
+        otherframe = get_raw_frame(iter->second);
+        frame_cache_[iter->first] = std::make_pair(iter->second, otherframe);
+      }
+        
       frame->merge(*otherframe);
     }
 

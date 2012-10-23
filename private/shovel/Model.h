@@ -51,6 +51,9 @@ class Model
 
   I3FramePtr get_frame(unsigned);
 
+  unsigned cached_frame_index_;
+  I3FramePtr cached_frame_;
+    
 public:
   
   Model(View& view);
@@ -80,7 +83,8 @@ public:
   unsigned totalframes();
 
   std::vector<I3Frame::Stream> streams(unsigned start_index, unsigned length);
- 
+  std::vector<std::string> sub_event_streams(unsigned start_index, unsigned length);
+
 };
 
 
