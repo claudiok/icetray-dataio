@@ -112,6 +112,8 @@ I3MultiWriter::Process()
 
   uint64_t bytes_written;
 
+  // Need to flush to evaluate file size
+  filterstream_.flush();
   io::counter64* ctr = filterstream_.component<io::counter64>(filterstream_.size() - 2);
   if (!ctr) log_fatal("couldnt get counter from stream");
   bytes_written = ctr->characters();
