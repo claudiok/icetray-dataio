@@ -2,7 +2,7 @@ from icecube import icetray, interfaces
 from icecube.load_pybindings import load_pybindings
 load_pybindings(__name__, __path__)
 
-from I3FileStagerFile import I3FileStagerFile
+from .I3FileStagerFile import I3FileStagerFile
 
 @icetray.traysegment_inherit('I3Reader', removeopts=['FileStagerList'])
 def I3Reader(tray, name, **kwargs):
